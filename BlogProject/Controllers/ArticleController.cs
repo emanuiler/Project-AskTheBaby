@@ -53,6 +53,7 @@ namespace BlogProject.Controllers
         }
 
         // Get Article/Create
+        [Authorize]
         public ActionResult Create()
         {
             return View();
@@ -60,6 +61,7 @@ namespace BlogProject.Controllers
 
         // Post Article/Create
         [HttpPost]
+        [Authorize]
         public ActionResult Create(Article article)
         {
             if (ModelState.IsValid)
@@ -101,6 +103,12 @@ namespace BlogProject.Controllers
                     .Include(a => a.Author)
                     .First();
 
+                // Validating
+                if (!IsUserAuthorizeToEdit(article))
+                {
+                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                }
+
                 // Check if exists
                 if (article == null)
                 {
@@ -129,6 +137,12 @@ namespace BlogProject.Controllers
                     .Where(a => a.Id == id)
                     .Include(a => a.Author)
                     .First();
+
+                // Validating
+                if (! IsUserAuthorizeToEdit(article))
+                {
+                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                }
 
                 // Check if exists
                 if (article == null)
@@ -159,6 +173,12 @@ namespace BlogProject.Controllers
                 var article = database.Articles
                     .Where(a => a.Id == id)
                     .First();
+
+                // Validating
+                if (!IsUserAuthorizeToEdit(article))
+                {
+                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                }
 
                 // Check if exists
                 if (article == null)
@@ -205,6 +225,13 @@ namespace BlogProject.Controllers
 
             // If model state is invalid return the same view
             return View(model);
+        }
+
+        private bool IsUserAuthorizeToEdit(Article article)
+        {
+            bool isAuthor = article.IsAuthor(this.User.Identity.Name);
+
+            return isAuthor;
         }
     }
 }
